@@ -1,2 +1,3 @@
 - Test every implementation thoroughly
 - Set up a Github CI/CD to test everything, if there is a new implementation, include it into the CI/CD
+- If you need anything added to the environment, let the user know so that they can add it
