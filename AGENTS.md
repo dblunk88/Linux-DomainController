@@ -9,3 +9,4 @@
 - Also use samba-ad-dc
 - I included Docker. Please set up various servers and users to fully test all functionality of the fully set-up DC
 - Also have the DC fully installed on a Docker container seperately to the script
+- Have a config file with all of the variables that the installer can use to install the DC (for example: Domain Name, etc)
