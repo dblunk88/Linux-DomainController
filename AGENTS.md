@@ -1,3 +1,3 @@
 - Test every implementation thoroughly
-- Set up a Github CI/CD to test everything, if there is a new implementation, include it into the CI/CD
-- If you need anything added to the environment, let the user know so that they can add it
+- Set up a Github CI/CD to test everything, if there is a new implementation, include it into the CI/CD. Also make sure to include all packages that need to be installed
+- If you need anything added to the environment, let the user know so that they can add it (keep in mind that you are working in an offline environment)
