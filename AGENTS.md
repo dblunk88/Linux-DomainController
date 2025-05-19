@@ -1,1 +1,2 @@
-
+- Test every implementation thoroughly
+- Set up a Github CI/CD to test everything, if there is a new implementation, include it into the CI/CD
