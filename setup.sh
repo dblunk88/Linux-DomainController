@@ -29,9 +29,11 @@ fi
 
 install_packages() {
     echo "Installing required packages..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    DEBIAN_FRONTEND=noninteractive apt-get install -y samba smbclient krb5-user winbind \
-        bind9 dnsutils
+    apt-get install -y samba smbclient krb5-user winbind \
+        bind9 dnsutils chrony
+    unset DEBIAN_FRONTEND
 }
 
 configure_kerberos() {
@@ -56,10 +58,40 @@ join_domain() {
     samba-tool domain join "$domain" DC --dns-backend=SAMBA_INTERNAL --realm="$REALM"
 }
 
+configure_samba() {
+    echo "Configuring Samba..."
+    cat >/etc/samba/smb.conf <<CONF
+[global]
+    workgroup = ${DOMAIN:-$(echo "$REALM" | cut -d. -f1)}
+    realm = $REALM
+    server role = active directory domain controller
+    idmap_ldb:use rfc2307 = yes
+
+[sysvol]
+    path = /var/lib/samba/sysvol
+    read only = no
+
+[netlogon]
+    path = /var/lib/samba/sysvol/${REALM,,}/scripts
+    read only = no
+CONF
+}
+
 install_gui() {
     echo "Installing Cockpit and samba-ad-dc module..."
+    export DEBIAN_FRONTEND=noninteractive
     apt-get install -y cockpit cockpit-samba-ad-dc || true
+    unset DEBIAN_FRONTEND
     systemctl enable --now cockpit.socket
+}
+
+configure_ntp() {
+    echo "Configuring time synchronization..."
+    cat >/etc/chrony/chrony.conf <<NTP
+pool pool.ntp.org iburst
+allow 0.0.0.0/0
+NTP
+    systemctl enable --now chrony || true
 }
 
 # main
@@ -97,6 +129,7 @@ done
 
 install_packages
 configure_kerberos
+configure_ntp
 
 case $ACTION in
     provision)
@@ -115,6 +148,8 @@ case $ACTION in
         exit 1
         ;;
 esac
+
+configure_samba
 
 if [[ $GUI == "true" ]]; then
     install_gui
