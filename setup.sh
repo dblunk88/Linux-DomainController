@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Optional configuration file
+CONFIG_FILE="./config.env"
+if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+fi
+
+# Enable reduced functionality when running in CI tests
+TEST_MODE=${TEST_MODE:-}
+
 # setup.sh - configure a Samba Active Directory Domain Controller on Linux
 # This script installs the `samba-ad-dc` service, configures Kerberos and Samba,
 # and provisions or joins a domain.
@@ -29,6 +39,10 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 install_packages() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping package installation"
+        return
+    fi
     echo "Installing required packages..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
@@ -38,6 +52,10 @@ install_packages() {
 }
 
 configure_kerberos() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping Kerberos configuration"
+        return
+    fi
     echo "Configuring Kerberos..."
     cat >/etc/krb5.conf <<KRB
 [libdefaults]
@@ -48,18 +66,31 @@ KRB
 }
 
 provision_domain() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping domain provisioning"
+        return
+    fi
     echo "Provisioning new domain $REALM..."
     samba-tool domain provision --use-rfc2307 --realm="$REALM" --domain="$DOMAIN" \
-        --server-role=dc --dns-backend=SAMBA_INTERNAL
+        --server-role=dc --dns-backend=SAMBA_INTERNAL --adminpass="$ADMIN_PASS"
 }
 
 join_domain() {
     local domain=$1
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping join domain $domain"
+        return
+    fi
     echo "Joining existing domain $domain..."
-    samba-tool domain join "$domain" DC --dns-backend=SAMBA_INTERNAL --realm="$REALM"
+    samba-tool domain join "$domain" DC --dns-backend=SAMBA_INTERNAL --realm="$REALM" \
+        --adminpass="$ADMIN_PASS"
 }
 
 configure_samba() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping Samba configuration"
+        return
+    fi
     echo "Configuring Samba..."
     cat >/etc/samba/smb.conf <<CONF
 [global]
@@ -79,6 +110,10 @@ CONF
 }
 
 install_gui() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping GUI installation"
+        return
+    fi
     echo "Installing Cockpit and samba-ad-dc module..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get install -y cockpit cockpit-samba-ad-dc || true
@@ -87,6 +122,10 @@ install_gui() {
 }
 
 configure_ntp() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping NTP configuration"
+        return
+    fi
     echo "Configuring time synchronization..."
     cat >/etc/chrony/chrony.conf <<NTP
 pool pool.ntp.org iburst
@@ -100,6 +139,7 @@ ACTION=""
 GUI="false"
 DOMAIN=""
 REALM="EXAMPLE.COM"
+ADMIN_PASS="${ADMIN_PASS:-Passw0rd!}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -156,6 +196,10 @@ if [[ $GUI == "true" ]]; then
     install_gui
 fi
 
-systemctl enable --now samba-ad-dc || true
+if [[ -z "$TEST_MODE" ]]; then
+    systemctl enable --now samba-ad-dc || true
+else
+    echo "[TEST_MODE] Skipping service start"
+fi
 
 echo "Setup complete."

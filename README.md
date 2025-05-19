@@ -10,7 +10,10 @@ This project aims to set up a Samba-based Active Directory Domain Controller on 
 - Basic time synchronization setup via chrony
 
 ## Getting Started
+Copy `config.env.example` to `config.env` and adjust the variables for your environment.
 Run `./setup.sh` on a fresh Linux machine. The script installs the `samba-ad-dc` package, configures Kerberos and Samba, sets up chrony for time synchronization, and optionally joins an existing domain. Pass `--gui` to install Cockpit with the `samba-ad-dc` management module for a web-based administration interface.
+
+For containerized setups, build the provided `Dockerfile` which provisions a Samba AD DC image using the same script.
 
 ## Disclaimer
 This repository contains high-level examples. Review and adapt the configuration to your environment. Testing in isolated labs is strongly recommended before production use.
