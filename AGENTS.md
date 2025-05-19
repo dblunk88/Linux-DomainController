@@ -6,3 +6,4 @@
   - Install the packages
   - unset DEBIAN_FRONTEND
 - To test, fully run the script test every implementation thoroughly
+- Also use samba-ad-dc
