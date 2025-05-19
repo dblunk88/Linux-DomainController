@@ -1,7 +1,8 @@
-- Test every implementation thoroughly
+- TEST EVERY NEW IMPLEMENTATION THOROUGHLY, DO NOT GIVE ME BROKEN THINGS
 - Set up a Github CI/CD to test everything, if there is a new implementation, include it into the CI/CD. Also make sure to include all packages that need to be installed
 - If you need anything added to the environment, let the user know so that they can add it (keep in mind that you are working in an offline environment)
 - For APT installs:
   - export DEBIAN_FRONTEND=noninteractive # Set the debconf frontend to noninteractive
   - Install the packages
   - unset DEBIAN_FRONTEND
+- To test, fully run the script test every implementation thoroughly
