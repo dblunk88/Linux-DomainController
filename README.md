@@ -17,3 +17,8 @@ This repository contains high-level examples. Review and adapt the configuration
 ## Testing
 Basic tests and linting are run via GitHub Actions. Shell scripts are linted with `shellcheck` and simple smoke tests ensure the setup script displays usage information correctly.
 
+## CI/CD
+The workflow defined in `.github/workflows/ci.yml` installs required packages and
+executes `shellcheck` followed by the test suite. Add new scripts to the workflow
+so they are automatically tested on every pull request.
+
