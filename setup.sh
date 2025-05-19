@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # setup.sh - configure a Samba Active Directory Domain Controller on Linux
-# This script installs Samba, configures Kerberos, and provisions or joins a domain.
+# This script installs the `samba-ad-dc` service, configures Kerberos and Samba,
+# and provisions or joins a domain.
 
 usage() {
     cat <<USAGE
@@ -11,7 +12,7 @@ Usage: $0 [--provision|--join DOMAIN] [--gui]
 Options:
   --provision           Provision a new domain (interactive)
   --join DOMAIN         Join an existing domain as an additional controller
-  --gui                 Install optional GUI management tools (Cockpit with addons)
+  --gui                 Install optional GUI management tools (Cockpit with 'samba-ad-dc' module)
 
 Run as root on a clean Linux server. The script is tested on Debian/Ubuntu.
 USAGE
@@ -31,7 +32,7 @@ install_packages() {
     echo "Installing required packages..."
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
-    apt-get install -y samba smbclient krb5-user winbind \
+    apt-get install -y samba-ad-dc samba smbclient krb5-user winbind \
         bind9 dnsutils chrony
     unset DEBIAN_FRONTEND
 }
@@ -155,6 +156,6 @@ if [[ $GUI == "true" ]]; then
     install_gui
 fi
 
-systemctl restart smbd nmbd winbind || true
+systemctl enable --now samba-ad-dc || true
 
 echo "Setup complete."

@@ -6,11 +6,11 @@ This project aims to set up a Samba-based Active Directory Domain Controller on 
 - Samba 4 as the core domain controller
 - Scripts to bootstrap a new domain or join an existing Windows domain
 - Example configuration for replication between Linux and Windows
-- Placeholder GUI management tool integration
+- Optional Cockpit web GUI with `samba-ad-dc` module
 - Basic time synchronization setup via chrony
 
 ## Getting Started
-Run `./setup.sh` on a fresh Linux machine. The script installs required packages, configures Kerberos and Samba, sets up chrony for time synchronization, and optionally joins an existing domain.
+Run `./setup.sh` on a fresh Linux machine. The script installs the `samba-ad-dc` package, configures Kerberos and Samba, sets up chrony for time synchronization, and optionally joins an existing domain. Pass `--gui` to install Cockpit with the `samba-ad-dc` management module for a web-based administration interface.
 
 ## Disclaimer
 This repository contains high-level examples. Review and adapt the configuration to your environment. Testing in isolated labs is strongly recommended before production use.
