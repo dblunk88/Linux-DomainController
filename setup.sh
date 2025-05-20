@@ -3,7 +3,13 @@ set -euo pipefail
 
 # Optional configuration file
 CONFIG_FILE="./config.env"
+EXAMPLE_CONFIG_FILE="./config.env.example"
 if [[ -f "$CONFIG_FILE" ]]; then
+    # shellcheck disable=SC1090
+    source "$CONFIG_FILE"
+elif [[ -f "$EXAMPLE_CONFIG_FILE" ]]; then
+    echo "Config file $CONFIG_FILE not found. Creating from example." >&2
+    cp "$EXAMPLE_CONFIG_FILE" "$CONFIG_FILE"
     # shellcheck disable=SC1090
     source "$CONFIG_FILE"
 fi
@@ -178,6 +184,12 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# Derive DOMAIN from REALM if not explicitly set
+if [[ -z "$DOMAIN" ]]; then
+    DOMAIN=$(echo "$REALM" | cut -d. -f1)
+    echo "DOMAIN not set; defaulting to $DOMAIN" >&2
+fi
 
 install_packages
 configure_kerberos
