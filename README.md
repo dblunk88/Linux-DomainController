@@ -17,7 +17,8 @@ variables in `config.env` to match your environment. The script installs the
 synchronization, and optionally joins an existing domain. Pass `--gui` to
 install Cockpit with the `samba-ad-dc` management module for a web-based
 administration interface. If the `DOMAIN` variable is not set, it will be
-derived from the realm automatically.
+ derived from the realm automatically. If `config.env` still contains the
+ default values from `config.env.example`, the script prints a warning.
 
 For containerized setups, build the provided `Dockerfile` which provisions a Samba AD DC image using the same script.
 

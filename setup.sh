@@ -14,6 +14,13 @@ elif [[ -f "$EXAMPLE_CONFIG_FILE" ]]; then
     source "$CONFIG_FILE"
 fi
 
+# Warn if the configuration file still contains the defaults
+if [[ -f "$CONFIG_FILE" && -f "$EXAMPLE_CONFIG_FILE" ]]; then
+    if cmp -s "$CONFIG_FILE" "$EXAMPLE_CONFIG_FILE"; then
+        echo "WARNING: $CONFIG_FILE contains default values. Edit this file before running in production." >&2
+    fi
+fi
+
 # Enable reduced functionality when running in CI tests
 TEST_MODE=${TEST_MODE:-}
 
