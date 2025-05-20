@@ -22,6 +22,14 @@ administration interface. If the `DOMAIN` variable is not set, it will be
 
 For containerized setups, build the provided `Dockerfile` which provisions a Samba AD DC image using the same script.
 
+To verify connectivity from additional systems, use the `client_test.sh` script.
+Run it on a fresh machine with `--dc-ip` pointing to the domain controller and
+`--realm` set to your realm. The script installs necessary client packages and
+checks that shares are reachable via Kerberos authentication.
+Alternatively, `client_container_test.sh` launches a temporary Docker container
+running `client_test.sh` so you can verify access without provisioning a
+separate VM.
+
 ## Disclaimer
 This repository contains high-level examples. Review and adapt the configuration to your environment. Testing in isolated labs is strongly recommended before production use.
 
