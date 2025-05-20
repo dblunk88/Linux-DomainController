@@ -13,15 +13,16 @@ jobs:
     - name: Install packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y shellcheck
+        sudo apt-get install -y shellcheck hadolint openjdk-17-jre-headless unzip
     - name: ShellCheck
       run: |
-        shellcheck setup.sh tests/test_setup.sh
+        shellcheck setup.sh keycloak_setup.sh tests/test_setup.sh tests/test_keycloak.sh
     - name: Lint Dockerfile
       run: |
         hadolint Dockerfile
     - name: Run tests
       run: |
-        chmod +x setup.sh tests/test_setup.sh tests/test_dockerfile.sh
+        chmod +x setup.sh keycloak_setup.sh tests/test_setup.sh tests/test_dockerfile.sh tests/test_keycloak.sh
         bash tests/test_setup.sh
         bash tests/test_dockerfile.sh
+        bash tests/test_keycloak.sh
