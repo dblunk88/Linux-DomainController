@@ -16,12 +16,18 @@ jobs:
         sudo apt-get install -y shellcheck hadolint
     - name: ShellCheck
       run: |
-        shellcheck setup.sh tests/test_setup.sh
+        shellcheck setup.sh client_test.sh client_container_test.sh \
+          tests/test_setup.sh tests/test_client_test.sh \
+          tests/test_client_container_test.sh
     - name: Lint Dockerfile
       run: |
         hadolint Dockerfile
     - name: Run tests
       run: |
-        chmod +x setup.sh tests/test_setup.sh tests/test_dockerfile.sh
+        chmod +x setup.sh client_test.sh client_container_test.sh \
+          tests/test_setup.sh tests/test_dockerfile.sh \
+          tests/test_client_test.sh tests/test_client_container_test.sh
         bash tests/test_setup.sh
         bash tests/test_dockerfile.sh
+        bash tests/test_client_test.sh
+        bash tests/test_client_container_test.sh
