@@ -51,6 +51,17 @@ install_packages() {
     unset DEBIAN_FRONTEND
 }
 
+cleanup_samba_conf() {
+    if [[ -n "$TEST_MODE" ]]; then
+        echo "[TEST_MODE] Skipping Samba config cleanup"
+        return
+    fi
+    if [[ -f /etc/samba/smb.conf ]]; then
+        echo "Backing up existing /etc/samba/smb.conf"
+        mv /etc/samba/smb.conf /etc/samba/smb.conf.bak
+    fi
+}
+
 configure_kerberos() {
     if [[ -n "$TEST_MODE" ]]; then
         echo "[TEST_MODE] Skipping Kerberos configuration"
@@ -171,6 +182,7 @@ done
 install_packages
 configure_kerberos
 configure_ntp
+cleanup_samba_conf
 
 case $ACTION in
     provision)
