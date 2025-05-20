@@ -22,6 +22,11 @@ administration interface. If the `DOMAIN` variable is not set, it will be
 
 For containerized setups, build the provided `Dockerfile` which provisions a Samba AD DC image using the same script.
 
+## Keycloak Integration
+`keycloak_setup.sh` installs Keycloak from the archived distribution included in
+this repository. The script can also print basic instructions for configuring
+Keycloak as a SAML identity provider for Google Workspace. Run `./keycloak_setup.sh --install` to extract Keycloak and `./keycloak_setup.sh --configure-google` to view the instructions.
+
 ## Disclaimer
 This repository contains high-level examples. Review and adapt the configuration to your environment. Testing in isolated labs is strongly recommended before production use.
 
