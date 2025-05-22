@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# main
+ACTION=""
+GUI="false"
+DOMAIN=""
+REALM="EXAMPLE.COM"
+ADMIN_PASS="${ADMIN_PASS:-Passw0rd!}"
+
 # Optional configuration file
 CONFIG_FILE="./config.env"
 EXAMPLE_CONFIG_FILE="./config.env.example"
 if [[ -f "$CONFIG_FILE" ]]; then
+    echo "Sourcing configuration from $CONFIG_FILE" >&2
     # shellcheck disable=SC1090
     source "$CONFIG_FILE"
 elif [[ -f "$EXAMPLE_CONFIG_FILE" ]]; then
@@ -60,7 +68,7 @@ install_packages() {
     export DEBIAN_FRONTEND=noninteractive
     apt-get update
     apt-get install -y samba-ad-dc samba smbclient krb5-user winbind \
-        bind9 dnsutils chrony
+        bind9 dnsutils chrony python3-ldb python3-samba
     unset DEBIAN_FRONTEND
 }
 
@@ -138,9 +146,19 @@ install_gui() {
         echo "[TEST_MODE] Skipping GUI installation"
         return
     fi
-    echo "Installing Cockpit and samba-ad-dc module..."
+    echo "Installing Cockpit and attempting to install samba-ad-dc module..."
     export DEBIAN_FRONTEND=noninteractive
-    apt-get install -y cockpit cockpit-samba-ad-dc || true
+    # Install cockpit first
+    if ! apt-get install -y cockpit; then
+        echo "Error: Failed to install Cockpit." >&2
+        exit 1 # Cockpit itself is a hard requirement for --gui
+    fi
+
+    # Attempt to install the samba-ad-dc module, but make it optional
+    if ! apt-get install -y cockpit-samba-ad-dc; then
+        echo "Warning: The 'cockpit-samba-ad-dc' package could not be found for this Ubuntu version. Skipping this specific GUI module." >&2
+        # Do not exit, allow script to continue
+    fi
     unset DEBIAN_FRONTEND
     systemctl enable --now cockpit.socket
 }
@@ -151,19 +169,19 @@ configure_ntp() {
         return
     fi
     echo "Configuring time synchronization..."
+
+    # Default CHRONY_ALLOW_SUBNET if not set or empty
+    CHRONY_ALLOW_SUBNET="${CHRONY_ALLOW_SUBNET:-127.0.0.1}"
+
     cat >/etc/chrony/chrony.conf <<NTP
 pool pool.ntp.org iburst
-allow 0.0.0.0/0
+allow ${CHRONY_ALLOW_SUBNET}
 NTP
-    systemctl enable --now chrony || true
+    if ! systemctl enable --now chrony; then
+        echo "Error: Failed to enable or start chrony service." >&2
+        exit 1
+    fi
 }
-
-# main
-ACTION=""
-GUI="false"
-DOMAIN=""
-REALM="EXAMPLE.COM"
-ADMIN_PASS="${ADMIN_PASS:-Passw0rd!}"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -205,6 +223,32 @@ cleanup_samba_conf
 
 case $ACTION in
     provision)
+        if [[ -z "$TEST_MODE" && ("$ADMIN_PASS" == "Passw0rd!" || -z "$ADMIN_PASS") ]]; then
+            echo "Default or empty administrator password detected."
+            new_pass=""
+            confirm_pass=""
+            for i in {1..3}; do
+                read -s -r -p "Please enter a strong password for the domain administrator: " new_pass
+                echo >&2 # Newline after password input
+                read -s -r -p "Confirm password: " confirm_pass
+                echo >&2 # Newline after password input
+                if [[ "$new_pass" == "$confirm_pass" ]]; then
+                    if [[ -z "$new_pass" ]]; then
+                        echo "Password cannot be empty. Please try again." >&2
+                    else
+                        ADMIN_PASS="$new_pass"
+                        echo "Password updated." >&2
+                        break
+                    fi
+                else
+                    echo "Passwords do not match. Please try again." >&2
+                fi
+                if [[ $i -eq 3 ]]; then
+                    echo "Failed to set password after 3 attempts. Exiting." >&2
+                    exit 1
+                fi
+            done
+        fi
         provision_domain
         ;;
     join)
@@ -228,7 +272,10 @@ if [[ $GUI == "true" ]]; then
 fi
 
 if [[ -z "$TEST_MODE" ]]; then
-    systemctl enable --now samba-ad-dc || true
+    if ! systemctl enable --now samba-ad-dc; then
+        echo "Error: Failed to enable or start samba-ad-dc service." >&2
+        exit 1
+    fi
 else
     echo "[TEST_MODE] Skipping service start"
 fi
